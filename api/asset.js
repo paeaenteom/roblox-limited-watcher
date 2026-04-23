@@ -1,5 +1,6 @@
-// /api/asset?id=154415221 — Roblox economy v2 assets details proxy
-// IsLimited / IsForSale / PriceInRobux 등 기본 정보
+// /api/asset?id=154415221 — economy v2 assets details
+
+const UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36';
 
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -13,18 +14,30 @@ export default async function handler(req, res) {
     return res.status(400).json({ error: 'id (numeric) required' });
   }
 
-  try {
-    const r = await fetch(`https://economy.roblox.com/v2/assets/${id}/details`, {
-      headers: {
-        'Accept': 'application/json',
-        'User-Agent': 'Mozilla/5.0 (compatible; TOKU-Watcher/2.1)'
+  const endpoints = [
+    `https://economy.roproxy.com/v2/assets/${id}/details`,
+    `https://economy.roblox.com/v2/assets/${id}/details`
+  ];
+
+  const errors = [];
+  for (const url of endpoints) {
+    try {
+      const r = await fetch(url, {
+        headers: {
+          'Accept': 'application/json',
+          'User-Agent': UA,
+          'Referer': 'https://www.roblox.com/'
+        }
+      });
+      if (r.ok) {
+        return res.status(200).json(await r.json());
       }
-    });
-    if (!r.ok) {
-      return res.status(r.status).json({ error: `Asset returned ${r.status}` });
+      errors.push({ url, status: r.status });
+      console.warn(`[asset] ${url} -> ${r.status}`);
+    } catch (e) {
+      errors.push({ url, error: e.message });
     }
-    return res.status(200).json(await r.json());
-  } catch (e) {
-    return res.status(500).json({ error: e.message });
   }
+
+  return res.status(502).json({ error: 'All asset endpoints failed', attempts: errors });
 }

@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>TOKU :: Roblox Limited Watcher v2.0</title>
+<title>TOKU :: Roblox Limited Watcher v2.1</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@500;700;900&family=Noto+Sans+KR:wght@300;400;500;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
@@ -347,7 +347,7 @@
       <div>
         <h1>ROBLOX LIMITED WATCHER</h1>
         <div class="subtitle">
-          로블록스 리미티드 가격 추적기 · <span class="accent">メレ Edition</span> · <span class="ver">v2.0 Rolimons</span>
+          로블록스 리미티드 가격 추적기 · <span class="accent">メレ Edition</span> · <span class="ver">v2.1 Vercel Serverless</span>
         </div>
       </div>
     </div>
@@ -440,7 +440,7 @@
   </div>
 
   <div class="footer-note">
-    데이터 소스: <a href="https://www.rolimons.com/" target="_blank">Rolimon's</a> (RAP/Value/Demand) + <a href="https://roproxy.com/" target="_blank">RoProxy</a> (실시간 Best Price/썸네일) · 설정은 localStorage 저장<br>
+    데이터 소스: <a href="https://www.rolimons.com/" target="_blank">Rolimon's</a> (RAP/Value/Demand) + Roblox 공식 API (Best Price/썸네일) · Vercel Serverless Functions 경유<br>
     <span class="warn">⚠ 이 페이지를 닫으면 모니터링이 중단됩니다.</span> 24/7 추적은 탭 열어두거나 Electron으로 감싸는 방향 추천.
   </div>
 </div>
@@ -451,10 +451,11 @@
    ============================================================ */
 
 const STORAGE_KEY = 'toku_roblox_watcher_v2';
-const PROXY_BASE = 'https://economy.roproxy.com';
-const THUMB_BASE = 'https://thumbnails.roproxy.com';
-const CATALOG_BASE = 'https://catalog.roproxy.com';
-const ROLIMONS_URL = 'https://www.rolimons.com/itemapi/itemdetails';
+// Vercel serverless functions (same origin → CORS 문제 없음)
+const API_ROLIMONS = '/api/rolimons';
+const API_CATALOG = (id) => `/api/catalog?id=${id}`;
+const API_ASSET = (id) => `/api/asset?id=${id}`;
+const API_THUMBNAIL = (id) => `/api/thumbnail?id=${id}`;
 const ROLIMONS_CACHE_TTL = 10 * 60 * 1000;
 
 const ROLI_IDX = {
@@ -534,7 +535,7 @@ async function fetchRolimonsData(force = false) {
   }
   updateRolimonsPillState('loading');
   try {
-    const res = await fetch(ROLIMONS_URL);
+    const res = await fetch(API_ROLIMONS);
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const data = await res.json();
     if (!data || !data.items) throw new Error('응답 형식 이상');
@@ -553,25 +554,20 @@ async function fetchRolimonsData(force = false) {
 function getRolimonsItem(id) { return rolimonsCache[String(id)] || null; }
 
 async function fetchAssetDetails(id) {
-  const res = await fetch(`${PROXY_BASE}/v2/assets/${id}/details`);
+  const res = await fetch(API_ASSET(id));
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
   return await res.json();
 }
 async function fetchCatalogItemDetails(id) {
   try {
-    const res = await fetch(`${CATALOG_BASE}/v1/catalog/items/details`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ items: [{ itemType: 'Asset', id: parseInt(id, 10) }] })
-    });
+    const res = await fetch(API_CATALOG(id));
     if (!res.ok) return null;
-    const data = await res.json();
-    return data?.data?.[0] || null;
+    return await res.json();
   } catch (e) { return null; }
 }
 async function fetchThumbnail(id) {
   try {
-    const res = await fetch(`${THUMB_BASE}/v1/assets?assetIds=${id}&size=420x420&format=Png&isCircular=false`);
+    const res = await fetch(API_THUMBNAIL(id));
     if (!res.ok) return null;
     const data = await res.json();
     return data?.data?.[0]?.imageUrl || null;
@@ -833,7 +829,7 @@ async function testWebhook() {
         username: 'TOKU Roblox Watcher',
         embeds: [{
           title: '🧪 웹훅 테스트',
-          description: 'v2.0 Rolimons Edition · 연결 정상. メレが見守っている。',
+          description: 'v2.1 Vercel Serverless · 연결 정상. メレが見守っている。',
           color: 0x8E24AA,
           footer: { text: 'TOKU Roblox Watcher · Test' },
           timestamp: new Date().toISOString()
@@ -1025,7 +1021,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   renderItems();
   updateStatusUI();
   updateRolimonsPillState('idle');
-  log('TOKU Watcher v2.0 Rolimons Edition 초기화.', 'ok');
+  log('TOKU Watcher v2.1 Vercel Serverless Edition 초기화.', 'ok');
   await fetchRolimonsData();
   renderItems();
 });

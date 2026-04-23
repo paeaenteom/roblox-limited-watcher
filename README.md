@@ -1,95 +1,115 @@
 # 🎮 Roblox Limited Watcher
 
-> **로블록스 리미티드 아이템 가격 변동을 자동 추적하고 Discord 웹훅으로 알림 받는 단일 HTML 도구**
-> _v2.0 · メレ Edition · Rolimon's 통합판_
+> **로블록스 리미티드 아이템 가격 변동을 자동 추적하고 Discord 웹훅으로 알림 받는 Vercel 웹앱**
+> _v2.1 · メレ Edition · Vercel Serverless_
 
-![HTML](https://img.shields.io/badge/HTML-single--file-E34F26?style=flat-square&logo=html5&logoColor=white)
-![No Backend](https://img.shields.io/badge/backend-none-1B5E20?style=flat-square)
+![HTML](https://img.shields.io/badge/HTML-single--page-E34F26?style=flat-square&logo=html5&logoColor=white)
+![Vercel](https://img.shields.io/badge/Vercel-Serverless-000000?style=flat-square&logo=vercel&logoColor=white)
 ![Rolimons](https://img.shields.io/badge/data-Rolimon's-8E24AA?style=flat-square)
 ![License: MIT](https://img.shields.io/badge/License-MIT-FFB300?style=flat-square)
 
 ---
 
-## 🆕 v2.0 업데이트
+## 🆕 v2.1 — Vercel Serverless 아키텍처
 
-- 🎯 **Rolimon's API 통합** — RAP / Value / Demand / Trend / 정확한 이름까지 2,200+ 리미티드 데이터 풀 로드
-- 💎 **3가지 추적 필드** — Best Price(실시간 리셀러 최저가) / RAP / Value 중 선택
-- 🛒 **Bargain Detector** — "Value의 80% 이하 도달시 알림" 같은 스마트 조건
-- 🏷️ **Projected / Hyped / Rare 태그** 자동 표시
-- 📊 **카드당 정보 대폭 증가** — RAP, Value, Demand, Trend 한눈에
+v2.0에서 브라우저 직접 호출시 CORS에 막히던 문제를 해결했음. 이제 모든 외부 API는 **Vercel 서버리스 함수**를 경유함 (`/api/*`). 이걸로 얻는 장점:
+
+- ✅ **CORS 완전 해결** — same-origin 호출이라 브라우저 제약 없음
+- ✅ **Edge Cache** — Rolimon's 5분, 썸네일 1시간 캐시로 rate limit 회피
+- ✅ **User-Agent 자유 설정** — Rolimon's 등이 요구하는 헤더 설정 가능
+- ✅ **Third-party 프록시(RoProxy) 의존 제거** — 직접 `roblox.com` 공식 API 호출
+- ✅ **무료** — Vercel Hobby 플랜으로 충분
+
+### 아키텍처
+
+```
+┌──────────────┐    /api/*     ┌──────────────────┐   https    ┌──────────────┐
+│  브라우저     │ ─────────→   │ Vercel Functions │ ─────────→ │ Rolimon's /  │
+│  (index.html)│              │  (Node.js)       │            │ Roblox API   │
+└──────────────┘ ←─── JSON ─── └──────────────────┘ ←── JSON ── └──────────────┘
+     │
+     localStorage (웹훅URL, 추적목록)
+```
+
+### API 엔드포인트
+
+| Path | 역할 | Cache |
+|------|------|-------|
+| `/api/rolimons` | Rolimon's 전체 리미티드 데이터 | 5분 |
+| `/api/catalog?id={id}` | Roblox catalog/items/details (lowestPrice) | 15초 |
+| `/api/asset?id={id}` | Roblox economy/v2/assets/{id}/details | 30초 |
+| `/api/thumbnail?id={id}` | Roblox thumbnails | 1시간 |
 
 ---
 
-## ✨ 핵심 기능
+## ✨ 기능
 
-- 🔗 **링크 / ID 다 지원** — Roblox URL, Rolimon's URL, 숫자 ID 전부 파싱
-- 💰 **정확한 가격 소스**
-  - **Best Price** = 로블록스 카탈로그의 "최저가격" 109K+ 같은 값 (실시간)
-  - **RAP** = Recent Average Price, 최근 실제 거래 평균가
-  - **Value** = Rolimon's 커뮤니티 가치 추정가
+- 🔗 **URL / ID 파싱** — Roblox URL, Rolimon's URL, 숫자 ID 전부 지원
+- 💰 **3가지 추적 필드 선택**
+  - **Best Price** (실시간 리셀러 최저가, 카탈로그의 109K+ 같은 값)
+  - **RAP** (Recent Average Price, 최근 평균 실거래가)
+  - **Value** (Rolimon's 커뮤니티 가치)
 - 🔔 **알림 조건 5가지**
   - 모든 변경시 무조건
   - 하락시에만
-  - 임계값 이하 도달시
-  - 임계값 이상 도달시
-  - **Value의 X% 이하 도달시 (bargain)**
-- 📡 **Discord 웹훅** — 변동 내역을 풍부한 임베드로 전송 (RAP/Value/Demand/Value 대비 % 포함)
-- 🖥️ **브라우저 Notification API** — 탭만 열어두면 데스크탑 알림
-- 💾 **localStorage 자동 저장** — 웹훅 URL, 추적 목록, 설정 모두 보존
-- 🎨 **メレ 테마** — 다크 + 그린/마젠타/골드 + 샤프 컷 디자인
+  - 임계값 이하/이상 도달시
+  - **Value의 X% 이하 (bargain detector)**
+- 📡 **Discord 웹훅** — RAP/Value/Demand/Value 대비% 포함한 풍부한 임베드
+- 🖥️ **브라우저 Notification**
+- 💾 **localStorage 저장**
+- 🎨 **メレ 테마** — 다크 + 그린/마젠타/골드 + 샤프 컷
 
 ---
 
-## 🚀 사용법
+## 🚀 배포 (Vercel)
 
-### 그냥 받아서 열기
-`index.html` 다운로드 → 더블클릭
+### 방법 1 : GitHub → Vercel 연동 (권장)
+1. 이 리포를 본인 GitHub에 올리기
+2. [vercel.com/new](https://vercel.com/new) → GitHub 리포 선택 → Import
+3. 빌드 설정 변경 없이 **Deploy**
+4. 완료. `/api/*` 자동으로 서버리스 함수로 배포됨
 
-### GitHub Pages 호스팅
-리포 → **Settings → Pages → Source: `main` / `/(root)`** → Save
-→ `https://<유저명>.github.io/<리포명>/`
-
-### 로컬 서버
+### 방법 2 : Vercel CLI
 ```bash
-python -m http.server 8080
-# 또는
-npx serve .
+npm i -g vercel
+cd roblox-limited-watcher
+vercel           # 첫 배포 (개발 프리뷰)
+vercel --prod    # 프로덕션 배포
 ```
+
+### 로컬 개발
+```bash
+vercel dev       # localhost:3000 에서 /api/* 시뮬레이션
+```
+> ⚠ `python -m http.server`로 열면 `/api/*`가 안 먹음. 반드시 `vercel dev` 사용.
 
 ---
 
 ## ⚙️ 사용 순서
 
-1. **Discord 웹훅 URL 발급**
-   채널 톱니바퀴 → 연동 → 웹후크 → 새 웹후크 → URL 복사
-2. **상단 입력 → "웹훅 테스트"** 로 연결 확인
-3. **Rolimon's 자동 로드** (페이지 열면 자동, 2,200+ 리미티드 데이터 캐싱)
+1. Vercel에 배포 → 접속
+2. **Discord 웹훅 URL 발급** → 입력 → **웹훅 테스트**
+3. 페이지 열면 **Rolimon's 데이터 자동 로드** (2,200+ 리미티드 캐싱됨)
 4. **아이템 추가**
-   - URL 또는 ID
+   - URL 또는 ID 입력
    - 추적 필드 선택 (Best Price 추천)
    - 알림 조건 + 임계값
-   - `+ 아이템 추가`
 5. **▶ 모니터링 시작**
 
 ---
 
-## 🛠️ 기술 스택 · 데이터 소스
-
-| 데이터 | 소스 | 갱신 주기 |
-|--------|------|----------|
-| RAP / Value / Demand / Trend / 이름 | [Rolimon's](https://www.rolimons.com) `/itemapi/itemdetails` | 10분 캐시 |
-| Best Price (리셀러 최저가) | Roblox Catalog API via [RoProxy](https://roproxy.com) | 설정 주기마다 |
-| 썸네일 | Roblox Thumbnails API via RoProxy | 아이템 추가시 |
+## 🛠️ 기술 스택
 
 | 영역 | 기술 |
 |------|------|
-| 저장 | 브라우저 `localStorage` (5-10MB) |
-| 폴링 | `setInterval` 15초~3600초 설정 가능 |
-| 알림 | Discord Webhook + Notification API |
+| 프론트엔드 | 순수 HTML/CSS/JS (빌드 없음) |
+| 백엔드 | Vercel Serverless Functions (Node.js 18+) |
+| 저장 | 브라우저 `localStorage` |
+| 데이터 소스 | Rolimon's + Roblox 공식 API |
 | 폰트 | Noto Serif KR / Noto Sans KR / JetBrains Mono |
-| 의존성 | **0개** — 순수 단일 HTML |
+| 의존성 | **0개** — npm install 없음 |
 
-### Rolimon's itemdetails 배열 구조
+### Rolimon's 데이터 구조
 
 ```json
 {
@@ -110,22 +130,40 @@ npx serve .
 
 ---
 
-## ⚠️ 주의사항
+## 📁 프로젝트 구조
 
-- **페이지를 닫으면 모니터링 중단.** 24/7 추적은 탭 열어두거나 Electron으로 래핑 권장.
-- **체크 주기는 60초 이상 권장.** 너무 짧으면 RoProxy 레이트리밋 위험.
-- **Rolimon's는 리미티드만 추적.** 일반 카탈로그 아이템은 RAP/Value/Demand가 전부 `-`로 표시되며 Best Price만 동작.
-- **localStorage는 도메인 단위.** GitHub Pages에 올리면 그 URL에서 모든 기기가 같은 데이터 (로그인 아님).
-- **Rolimon's API는 분당 1회 rate limit.** 10분 캐시로 해결하지만 수동 갱신 버튼 남발 금지.
+```
+roblox-limited-watcher/
+├── index.html              # 프론트엔드 (UI + 클라이언트 로직)
+├── api/
+│   ├── rolimons.js         # Rolimon's 프록시
+│   ├── catalog.js          # Roblox catalog/items/details
+│   ├── asset.js            # Roblox economy/v2/assets
+│   └── thumbnail.js        # Roblox thumbnails
+├── vercel.json             # Vercel 함수 설정
+├── docs/                   # 스크린샷 폴더
+├── README.md
+├── LICENSE
+└── .gitignore
+```
 
 ---
 
-## 🎨 메레 테마 컬러 팔레트
+## ⚠️ 주의사항
+
+- **페이지를 닫으면 모니터링 중단.** 24/7 추적은 탭 열어두거나 Electron 래핑 필요.
+- **체크 주기는 60초 이상 권장.** 너무 짧으면 Vercel 함수 호출량/Roblox rate limit 걱정됨.
+- **Rolimon's는 리미티드만.** 일반 카탈로그 아이템은 RAP/Value/Demand가 `-`로 표시, Best Price만 동작.
+- **localStorage는 도메인 단위.** Vercel 도메인에 종속. 다른 도메인 옮기면 데이터 리셋.
+- **Vercel Hobby 플랜 limits:** 함수 100GB-hours/월, 대역폭 100GB/월. 개인 사용엔 충분.
+
+---
+
+## 🎨 메레 테마
 
 | 역할 | HEX |
 |------|-----|
 | Deep BG | `#0A0A14` |
-| Panel | `#14142A` |
 | Chameleon Green | `#1B5E20` → `#4CAF50` |
 | Magenta-Violet | `#8E24AA` → `#BA68C8` |
 | Phoenix Gold | `#FFB300` → `#FFD54F` |
@@ -134,12 +172,12 @@ npx serve .
 
 ## 📄 라이선스
 
-MIT — [LICENSE](./LICENSE) 참조
+MIT — [LICENSE](./LICENSE)
 
 ## 🙏 크레딧
 
 - 리미티드 데이터 : [Rolimon's](https://www.rolimons.com)
-- CORS 프록시 : [RoProxy](https://roproxy.com)
+- 호스팅 : [Vercel](https://vercel.com)
 - 디자인 : 게키레인저 メレ
 
 > _メレが見守っている。_

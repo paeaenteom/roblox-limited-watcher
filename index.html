@@ -492,6 +492,13 @@
     color: var(--text-dim);
   }
 
+  .price-label.warn-src {
+    color: var(--gold);
+    text-transform: none;
+    letter-spacing: 0.3px;
+    font-size: 11px;
+  }
+
   .price-val {
     font-family: 'JetBrains Mono', monospace;
     font-weight: 700;
@@ -795,8 +802,26 @@ async function fetchAssetDetails(id) {
   return await res.json();
 }
 
+// 🔥 가장 정확한 lowestPrice 소스 - 로블록스 카탈로그 페이지가 실제로 사용하는 API
+async function fetchCatalogItemDetails(id) {
+  try {
+    const res = await fetch(`${CATALOG_BASE}/v1/catalog/items/details`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        items: [{ itemType: 'Asset', id: parseInt(id, 10) }]
+      })
+    });
+    if (!res.ok) return null;
+    const data = await res.json();
+    return data?.data?.[0] || null;
+  } catch (e) {
+    return null;
+  }
+}
+
 async function fetchLowestResellerPrice(id) {
-  // 리미티드 아이템의 최저 리셀러 가격 조회
+  // fallback - 리미티드 리셀러 직접 조회 (인증 없으면 빈 응답 가능)
   try {
     const res = await fetch(`${PROXY_BASE}/v1/assets/${id}/resellers?cursor=&limit=10`);
     if (!res.ok) return null;
@@ -824,15 +849,49 @@ async function fetchThumbnail(id) {
 }
 
 async function getEffectivePrice(details, id) {
-  // 우선순위: 리미티드면 리셀러 최저가 → PriceInRobux → null
+  // 우선순위 1: catalog/items/details (로블록스 카탈로그 페이지가 쓰는 그 API)
+  //   - 리미티드면 lowestPrice = 리셀러 최저가
+  //   - 일반 카탈로그면 price = 현재 판매가
+  const catalog = await fetchCatalogItemDetails(id);
+  if (catalog) {
+    if (typeof catalog.lowestPrice === 'number' && catalog.lowestPrice > 0) {
+      return { price: catalog.lowestPrice, source: 'lowest-reseller' };
+    }
+    if (typeof catalog.price === 'number' && catalog.price > 0) {
+      return { price: catalog.price, source: 'catalog' };
+    }
+  }
+
+  // 우선순위 2: 리미티드 → resellers API 직접
   if (details.IsLimited || details.IsLimitedUnique) {
     const reseller = await fetchLowestResellerPrice(id);
-    if (reseller !== null) return { price: reseller, source: 'reseller' };
+    if (reseller !== null) return { price: reseller, source: 'reseller-fallback' };
   }
+
+  // 우선순위 3: economy v2 details의 PriceInRobux
+  //   ⚠ 리미티드의 경우 이 값은 보통 "출시가"이지 현재 가격이 아님
   if (typeof details.PriceInRobux === 'number') {
-    return { price: details.PriceInRobux, source: 'catalog' };
+    const isLimited = details.IsLimited || details.IsLimitedUnique;
+    return {
+      price: details.PriceInRobux,
+      source: isLimited ? 'original-price' : 'catalog-v2'
+    };
   }
+
   return { price: null, source: 'unavailable' };
+}
+
+// 가격 소스 한글 라벨
+function priceSourceLabel(src) {
+  switch (src) {
+    case 'lowest-reseller': return '리셀러 최저가';
+    case 'reseller-fallback': return '리셀러 (fallback)';
+    case 'catalog': return '카탈로그 판매가';
+    case 'catalog-v2': return '카탈로그 (v2)';
+    case 'original-price': return '⚠ 출시가 (리셀러 조회 실패)';
+    case 'unavailable': return '가격 없음';
+    default: return src || '?';
+  }
 }
 
 /* ---------- ADD ITEM ---------- */
@@ -1146,7 +1205,7 @@ function renderItems() {
           </div>
         </div>
         <div class="item-price-row">
-          <span class="price-label">현재가 (${it.priceSource || '?'})</span>
+          <span class="price-label ${it.priceSource === 'original-price' ? 'warn-src' : ''}">${priceSourceLabel(it.priceSource)}</span>
           ${priceDisplay}
         </div>
         <div class="item-rule">

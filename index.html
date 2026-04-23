@@ -1,0 +1,1266 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TOKU :: Roblox Limited Watcher</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@500;700;900&family=Noto+Sans+KR:wght@300;400;500;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    /* Mere Theme — Chameleon Green / Magenta-Violet / Phoenix Gold */
+    --bg-deep: #0A0A14;
+    --bg-panel: #14142A;
+    --bg-card: #1B1B36;
+    --bg-card-hover: #232342;
+    --green-1: #1B5E20;
+    --green-2: #2E7D32;
+    --green-3: #4CAF50;
+    --green-glow: rgba(76, 175, 80, 0.3);
+    --magenta: #8E24AA;
+    --magenta-light: #BA68C8;
+    --magenta-glow: rgba(142, 36, 170, 0.4);
+    --gold: #FFB300;
+    --gold-light: #FFD54F;
+    --shadow: #000008;
+    --text-main: #EDEDF5;
+    --text-dim: #9595B0;
+    --text-faint: #555570;
+    --border: rgba(142, 36, 170, 0.35);
+    --border-bright: rgba(186, 104, 200, 0.6);
+    --danger: #E53935;
+    --success: #43A047;
+
+    --cut-sm: polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px);
+    --cut-md: polygon(14px 0, 100% 0, 100% calc(100% - 14px), calc(100% - 14px) 100%, 0 100%, 0 14px);
+    --cut-lg: polygon(20px 0, 100% 0, 100% calc(100% - 20px), calc(100% - 20px) 100%, 0 100%, 0 20px);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html, body {
+    background: var(--bg-deep);
+    color: var(--text-main);
+    font-family: 'Noto Sans KR', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Layered atmospheric background */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background:
+      radial-gradient(circle at 15% 20%, rgba(142, 36, 170, 0.18) 0%, transparent 45%),
+      radial-gradient(circle at 85% 80%, rgba(46, 125, 50, 0.15) 0%, transparent 50%),
+      radial-gradient(circle at 50% 50%, rgba(255, 179, 0, 0.04) 0%, transparent 60%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  body::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(142, 36, 170, 0.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(142, 36, 170, 0.04) 1px, transparent 1px);
+    background-size: 60px 60px;
+    pointer-events: none;
+    z-index: 0;
+    mask-image: radial-gradient(ellipse at center, black 0%, transparent 70%);
+  }
+
+  .wrap {
+    position: relative;
+    z-index: 1;
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 36px 24px 80px;
+  }
+
+  /* ---------- HEADER ---------- */
+  header {
+    margin-bottom: 28px;
+    position: relative;
+  }
+
+  .brand-row {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    margin-bottom: 8px;
+  }
+
+  .brand-mark {
+    width: 56px;
+    height: 56px;
+    background: linear-gradient(135deg, var(--green-2), var(--magenta));
+    clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Noto Serif KR', serif;
+    font-weight: 900;
+    font-size: 24px;
+    color: var(--bg-deep);
+    box-shadow:
+      0 0 30px var(--magenta-glow),
+      inset 0 0 20px rgba(0,0,0,0.3);
+  }
+
+  h1 {
+    font-family: 'Noto Serif KR', serif;
+    font-weight: 900;
+    font-size: 38px;
+    line-height: 1;
+    background: linear-gradient(90deg, var(--green-3) 0%, var(--magenta-light) 60%, var(--gold) 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    letter-spacing: -1px;
+  }
+
+  .subtitle {
+    font-size: 13px;
+    color: var(--text-dim);
+    margin-top: 6px;
+    letter-spacing: 0.5px;
+  }
+
+  .subtitle .accent { color: var(--gold); font-weight: 500; }
+
+  /* status pill */
+  .status-bar {
+    display: flex;
+    gap: 12px;
+    margin-top: 18px;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+
+  .pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 14px;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    clip-path: var(--cut-sm);
+    font-size: 12px;
+    color: var(--text-dim);
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  .pill.active {
+    border-color: var(--green-3);
+    color: var(--green-3);
+    box-shadow: 0 0 20px var(--green-glow);
+  }
+
+  .pill.idle {
+    border-color: var(--text-faint);
+  }
+
+  .led {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--text-faint);
+  }
+
+  .pill.active .led {
+    background: var(--green-3);
+    box-shadow: 0 0 10px var(--green-3);
+    animation: pulse 1.5s ease-in-out infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
+  }
+
+  /* ---------- PANELS ---------- */
+  .grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    margin-bottom: 24px;
+  }
+
+  @media (max-width: 880px) {
+    .grid { grid-template-columns: 1fr; }
+    h1 { font-size: 28px; }
+  }
+
+  .panel {
+    background: var(--bg-panel);
+    clip-path: var(--cut-md);
+    padding: 24px;
+    position: relative;
+    border: 1px solid var(--border);
+  }
+
+  .panel-title {
+    font-family: 'Noto Serif KR', serif;
+    font-size: 14px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    color: var(--magenta-light);
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .panel-title::before {
+    content: '';
+    width: 4px;
+    height: 16px;
+    background: var(--gold);
+  }
+
+  .field {
+    margin-bottom: 14px;
+  }
+
+  .field label {
+    display: block;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    color: var(--text-dim);
+    margin-bottom: 6px;
+    font-weight: 500;
+  }
+
+  .input, .select {
+    width: 100%;
+    background: var(--bg-deep);
+    border: 1px solid var(--border);
+    color: var(--text-main);
+    padding: 11px 14px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    clip-path: var(--cut-sm);
+    transition: all 0.2s;
+  }
+
+  .input:focus, .select:focus {
+    outline: none;
+    border-color: var(--magenta-light);
+    box-shadow: 0 0 0 2px var(--magenta-glow);
+  }
+
+  .input::placeholder { color: var(--text-faint); }
+
+  .row {
+    display: flex;
+    gap: 10px;
+  }
+
+  .row > * { flex: 1; }
+
+  .btn {
+    background: linear-gradient(135deg, var(--green-1), var(--green-2));
+    color: var(--text-main);
+    border: none;
+    padding: 12px 22px;
+    font-family: 'Noto Sans KR', sans-serif;
+    font-weight: 700;
+    font-size: 13px;
+    letter-spacing: 1px;
+    cursor: pointer;
+    clip-path: var(--cut-sm);
+    transition: all 0.18s;
+    text-transform: uppercase;
+  }
+
+  .btn:hover {
+    background: linear-gradient(135deg, var(--green-2), var(--green-3));
+    transform: translateY(-1px);
+    box-shadow: 0 4px 20px var(--green-glow);
+  }
+
+  .btn:active { transform: translateY(0); }
+
+  .btn.magenta {
+    background: linear-gradient(135deg, #6A1B9A, var(--magenta));
+  }
+  .btn.magenta:hover {
+    background: linear-gradient(135deg, var(--magenta), var(--magenta-light));
+    box-shadow: 0 4px 20px var(--magenta-glow);
+  }
+
+  .btn.danger {
+    background: linear-gradient(135deg, #B71C1C, var(--danger));
+  }
+
+  .btn.gold {
+    background: linear-gradient(135deg, #E65100, var(--gold));
+    color: var(--bg-deep);
+  }
+
+  .btn.ghost {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--text-dim);
+  }
+  .btn.ghost:hover {
+    border-color: var(--magenta-light);
+    color: var(--text-main);
+    background: var(--bg-card);
+    box-shadow: none;
+    transform: none;
+  }
+
+  .btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+    transform: none !important;
+  }
+
+  /* ---------- ITEM LIST ---------- */
+  .list-section {
+    margin-top: 8px;
+  }
+
+  .list-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 14px;
+  }
+
+  .list-title {
+    font-family: 'Noto Serif KR', serif;
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--green-3);
+  }
+
+  .list-count {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--text-dim);
+  }
+
+  .empty-state {
+    background: var(--bg-panel);
+    clip-path: var(--cut-md);
+    padding: 60px 24px;
+    text-align: center;
+    color: var(--text-faint);
+    font-size: 14px;
+    border: 1px dashed var(--border);
+  }
+
+  .item-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(330px, 1fr));
+    gap: 16px;
+  }
+
+  .item-card {
+    background: var(--bg-card);
+    clip-path: var(--cut-md);
+    padding: 0;
+    border: 1px solid var(--border);
+    transition: all 0.2s;
+    overflow: hidden;
+    position: relative;
+  }
+
+  .item-card:hover {
+    background: var(--bg-card-hover);
+    border-color: var(--border-bright);
+    transform: translateY(-2px);
+  }
+
+  .item-card.flash {
+    animation: priceFlash 1.5s ease-out;
+  }
+
+  @keyframes priceFlash {
+    0% { box-shadow: 0 0 40px var(--gold), inset 0 0 30px rgba(255, 179, 0, 0.2); }
+    100% { box-shadow: none; }
+  }
+
+  .item-head {
+    display: flex;
+    gap: 14px;
+    padding: 14px;
+    align-items: flex-start;
+  }
+
+  .item-thumb {
+    width: 76px;
+    height: 76px;
+    background: var(--bg-deep);
+    clip-path: var(--cut-sm);
+    flex-shrink: 0;
+    object-fit: cover;
+    border: 1px solid var(--border);
+  }
+
+  .item-thumb-placeholder {
+    width: 76px; height: 76px;
+    background: var(--bg-deep);
+    clip-path: var(--cut-sm);
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-faint);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    border: 1px solid var(--border);
+  }
+
+  .item-meta { flex: 1; min-width: 0; }
+
+  .item-name {
+    font-weight: 700;
+    font-size: 14px;
+    color: var(--text-main);
+    margin-bottom: 4px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    line-height: 1.3;
+  }
+
+  .item-id {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--text-faint);
+    margin-bottom: 6px;
+  }
+
+  .item-id a {
+    color: var(--magenta-light);
+    text-decoration: none;
+  }
+  .item-id a:hover { color: var(--gold); }
+
+  .item-tag {
+    display: inline-block;
+    font-size: 10px;
+    padding: 2px 8px;
+    clip-path: var(--cut-sm);
+    font-family: 'JetBrains Mono', monospace;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-right: 4px;
+    margin-top: 4px;
+  }
+
+  .item-tag.limited {
+    background: var(--magenta);
+    color: white;
+  }
+  .item-tag.unique {
+    background: var(--gold);
+    color: var(--bg-deep);
+  }
+  .item-tag.normal {
+    background: var(--green-2);
+    color: white;
+  }
+  .item-tag.offsale {
+    background: var(--text-faint);
+    color: var(--bg-deep);
+  }
+
+  .item-price-row {
+    background: rgba(0,0,0,0.3);
+    padding: 12px 14px;
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    border-top: 1px solid rgba(142, 36, 170, 0.2);
+  }
+
+  .price-label {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--text-dim);
+  }
+
+  .price-val {
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 700;
+    font-size: 18px;
+    color: var(--gold);
+  }
+
+  .price-val.unset { color: var(--text-faint); font-size: 13px; font-style: italic; }
+
+  .item-rule {
+    padding: 10px 14px;
+    background: rgba(142, 36, 170, 0.08);
+    font-size: 11px;
+    color: var(--magenta-light);
+    border-top: 1px solid rgba(142, 36, 170, 0.15);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .item-rule .rule-text { font-family: 'JetBrains Mono', monospace; }
+
+  .item-actions {
+    padding: 10px 14px;
+    display: flex;
+    gap: 8px;
+    border-top: 1px solid rgba(142, 36, 170, 0.15);
+  }
+
+  .item-actions button {
+    flex: 1;
+    padding: 8px 10px;
+    font-size: 11px;
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--text-dim);
+    cursor: pointer;
+    clip-path: var(--cut-sm);
+    font-family: 'Noto Sans KR', sans-serif;
+    transition: all 0.15s;
+  }
+  .item-actions button:hover {
+    border-color: var(--magenta-light);
+    color: var(--text-main);
+  }
+  .item-actions button.del:hover {
+    border-color: var(--danger);
+    color: var(--danger);
+  }
+
+  .last-checked {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--text-faint);
+    padding: 8px 14px;
+    text-align: right;
+  }
+
+  /* ---------- LOG ---------- */
+  .log-panel {
+    margin-top: 24px;
+    background: var(--bg-panel);
+    clip-path: var(--cut-md);
+    padding: 20px 24px;
+    border: 1px solid var(--border);
+  }
+
+  .log-output {
+    background: var(--bg-deep);
+    clip-path: var(--cut-sm);
+    padding: 14px;
+    height: 220px;
+    overflow-y: auto;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    line-height: 1.6;
+    border: 1px solid rgba(142, 36, 170, 0.15);
+  }
+
+  .log-output::-webkit-scrollbar { width: 6px; }
+  .log-output::-webkit-scrollbar-track { background: transparent; }
+  .log-output::-webkit-scrollbar-thumb {
+    background: var(--magenta);
+    border-radius: 3px;
+  }
+
+  .log-line { color: var(--text-dim); }
+  .log-line.ok { color: var(--green-3); }
+  .log-line.warn { color: var(--gold); }
+  .log-line.err { color: var(--danger); }
+  .log-line.alert { color: var(--magenta-light); font-weight: 700; }
+  .log-time { color: var(--text-faint); margin-right: 8px; }
+
+  /* ---------- HELP ---------- */
+  .help-text {
+    font-size: 11px;
+    color: var(--text-faint);
+    margin-top: 6px;
+    line-height: 1.5;
+  }
+  .help-text code {
+    background: var(--bg-deep);
+    color: var(--gold);
+    padding: 2px 5px;
+    border-radius: 2px;
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  .footer-note {
+    margin-top: 32px;
+    text-align: center;
+    font-size: 11px;
+    color: var(--text-faint);
+    line-height: 1.7;
+  }
+  .footer-note .warn {
+    color: var(--gold);
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- HEADER -->
+  <header>
+    <div class="brand-row">
+      <div class="brand-mark">咩</div>
+      <div>
+        <h1>ROBLOX LIMITED WATCHER</h1>
+        <div class="subtitle">로블록스 리미티드 가격 변동 추적기 · <span class="accent">メレ Edition</span></div>
+      </div>
+    </div>
+    <div class="status-bar">
+      <div class="pill" id="statusPill"><span class="led"></span><span id="statusText">정지됨</span></div>
+      <div class="pill"><span id="itemsCountPill">0</span> ITEMS</div>
+      <div class="pill"><span id="checkCountPill">0</span> CHECKS</div>
+      <div class="pill"><span id="alertCountPill">0</span> ALERTS</div>
+    </div>
+  </header>
+
+  <!-- CONFIG GRID -->
+  <div class="grid">
+
+    <!-- WEBHOOK / ENGINE -->
+    <div class="panel">
+      <div class="panel-title">WEBHOOK · ENGINE</div>
+
+      <div class="field">
+        <label>Discord Webhook URL</label>
+        <input type="text" id="webhookUrl" class="input" placeholder="https://discord.com/api/webhooks/...">
+        <div class="help-text">디스코드 채널 → 설정 → 연동 → 웹후크에서 생성. 입력한 값은 브라우저에 저장됨.</div>
+      </div>
+
+      <div class="row">
+        <div class="field" style="flex:1;">
+          <label>체크 주기 (초)</label>
+          <input type="number" id="intervalSec" class="input" value="60" min="15" max="3600">
+        </div>
+        <div class="field" style="flex:1;">
+          <label>브라우저 알림</label>
+          <button class="btn ghost" id="notifBtn" style="width:100%;">알림 권한 요청</button>
+        </div>
+      </div>
+
+      <div class="row" style="margin-top:8px;">
+        <button class="btn" id="startBtn">▶ 모니터링 시작</button>
+        <button class="btn danger" id="stopBtn" disabled>■ 정지</button>
+      </div>
+
+      <div class="row" style="margin-top:8px;">
+        <button class="btn ghost" id="testWebhookBtn">웹훅 테스트</button>
+        <button class="btn ghost" id="checkNowBtn">전체 즉시 체크</button>
+      </div>
+    </div>
+
+    <!-- ADD ITEM -->
+    <div class="panel">
+      <div class="panel-title">ADD ITEM</div>
+
+      <div class="field">
+        <label>아이템 URL 또는 ID</label>
+        <input type="text" id="itemInput" class="input" placeholder="https://www.roblox.com/ko/catalog/154415221/... 또는 154415221">
+        <div class="help-text">예시: <code>154415221</code> 또는 <code>roblox.com/catalog/154415221/Recycled-Cardboard-Headphones</code></div>
+      </div>
+
+      <div class="row">
+        <div class="field" style="flex:1.4;">
+          <label>알림 조건</label>
+          <select id="alertMode" class="select">
+            <option value="any">가격 변경시 무조건</option>
+            <option value="below">이하로 떨어지면</option>
+            <option value="above">이상으로 오르면</option>
+            <option value="drop">하락시에만</option>
+          </select>
+        </div>
+        <div class="field" style="flex:1;">
+          <label>임계값 (R$)</label>
+          <input type="number" id="alertThreshold" class="input" placeholder="예: 5000" min="0">
+        </div>
+      </div>
+
+      <button class="btn magenta" id="addItemBtn" style="width:100%;">+ 아이템 추가</button>
+
+      <div class="help-text" style="margin-top:10px;">
+        리미티드/리미티드U는 최저 리셀러 가격을 추적, 일반 카탈로그는 카탈로그 가격을 추적함.
+      </div>
+    </div>
+  </div>
+
+  <!-- ITEM LIST -->
+  <div class="list-section">
+    <div class="list-header">
+      <div class="list-title">📦 추적 중인 아이템</div>
+      <div class="list-count"><span id="listCount">0</span> 개</div>
+    </div>
+    <div id="itemList"></div>
+  </div>
+
+  <!-- LOG -->
+  <div class="log-panel">
+    <div class="panel-title">ACTIVITY LOG</div>
+    <div class="log-output" id="logOutput"></div>
+  </div>
+
+  <div class="footer-note">
+    데이터 소스: <code>roproxy.com</code> (로블록스 공개 API 프록시) · 모든 설정은 브라우저 localStorage에 저장됨<br>
+    <span class="warn">⚠ 이 페이지를 닫으면 모니터링이 중단됩니다.</span> 백그라운드 추적을 원하면 탭을 열어두세요.
+  </div>
+</div>
+
+<script>
+/* ============================================================
+   TOKU :: Roblox Limited Watcher
+   메레 테마 단일 HTML — by Claude for 유빈
+   ============================================================ */
+
+const STORAGE_KEY = 'toku_roblox_watcher_v1';
+const PROXY_BASE = 'https://economy.roproxy.com';
+const THUMB_BASE = 'https://thumbnails.roproxy.com';
+const CATALOG_BASE = 'https://catalog.roproxy.com';
+
+let state = {
+  webhookUrl: '',
+  intervalSec: 60,
+  items: [],
+  stats: { checks: 0, alerts: 0 }
+};
+
+let pollTimer = null;
+let isRunning = false;
+
+/* ---------- STORAGE ---------- */
+function loadState() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      state = Object.assign(state, parsed);
+      if (!state.stats) state.stats = { checks: 0, alerts: 0 };
+    }
+  } catch (e) {
+    log('스토리지 로드 실패: ' + e.message, 'err');
+  }
+}
+
+function saveState() {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  } catch (e) {
+    log('저장 실패: ' + e.message, 'err');
+  }
+}
+
+/* ---------- LOG ---------- */
+function log(msg, type = '') {
+  const out = document.getElementById('logOutput');
+  const t = new Date().toTimeString().slice(0, 8);
+  const line = document.createElement('div');
+  line.className = 'log-line ' + type;
+  line.innerHTML = `<span class="log-time">[${t}]</span>${msg}`;
+  out.insertBefore(line, out.firstChild);
+  while (out.children.length > 200) out.removeChild(out.lastChild);
+}
+
+/* ---------- ID PARSE ---------- */
+function parseItemId(input) {
+  if (!input) return null;
+  input = input.trim();
+  if (/^\d+$/.test(input)) return input;
+  const match = input.match(/\/catalog\/(\d+)/i);
+  if (match) return match[1];
+  const matchAlt = input.match(/[?&]id=(\d+)/);
+  if (matchAlt) return matchAlt[1];
+  return null;
+}
+
+/* ---------- ROBLOX API ---------- */
+async function fetchAssetDetails(id) {
+  const res = await fetch(`${PROXY_BASE}/v2/assets/${id}/details`);
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  return await res.json();
+}
+
+async function fetchLowestResellerPrice(id) {
+  // 리미티드 아이템의 최저 리셀러 가격 조회
+  try {
+    const res = await fetch(`${PROXY_BASE}/v1/assets/${id}/resellers?cursor=&limit=10`);
+    if (!res.ok) return null;
+    const data = await res.json();
+    if (data && data.data && data.data.length > 0) {
+      const prices = data.data.map(d => d.price).filter(p => typeof p === 'number');
+      if (prices.length === 0) return null;
+      return Math.min(...prices);
+    }
+    return null;
+  } catch (e) {
+    return null;
+  }
+}
+
+async function fetchThumbnail(id) {
+  try {
+    const res = await fetch(`${THUMB_BASE}/v1/assets?assetIds=${id}&size=420x420&format=Png&isCircular=false`);
+    if (!res.ok) return null;
+    const data = await res.json();
+    return data?.data?.[0]?.imageUrl || null;
+  } catch (e) {
+    return null;
+  }
+}
+
+async function getEffectivePrice(details, id) {
+  // 우선순위: 리미티드면 리셀러 최저가 → PriceInRobux → null
+  if (details.IsLimited || details.IsLimitedUnique) {
+    const reseller = await fetchLowestResellerPrice(id);
+    if (reseller !== null) return { price: reseller, source: 'reseller' };
+  }
+  if (typeof details.PriceInRobux === 'number') {
+    return { price: details.PriceInRobux, source: 'catalog' };
+  }
+  return { price: null, source: 'unavailable' };
+}
+
+/* ---------- ADD ITEM ---------- */
+async function addItem() {
+  const input = document.getElementById('itemInput').value;
+  const id = parseItemId(input);
+  if (!id) {
+    log('유효한 아이템 ID/URL이 아님', 'err');
+    return;
+  }
+  if (state.items.find(it => it.id === id)) {
+    log(`이미 추적 중인 아이템: ${id}`, 'warn');
+    return;
+  }
+
+  const mode = document.getElementById('alertMode').value;
+  const thresholdRaw = document.getElementById('alertThreshold').value;
+  const threshold = thresholdRaw ? parseInt(thresholdRaw, 10) : null;
+  if ((mode === 'below' || mode === 'above') && (threshold === null || isNaN(threshold))) {
+    log('이 알림 조건은 임계값이 필요함', 'err');
+    return;
+  }
+
+  log(`아이템 정보 조회 중... (${id})`);
+  try {
+    const details = await fetchAssetDetails(id);
+    const { price, source } = await getEffectivePrice(details, id);
+    const thumb = await fetchThumbnail(id);
+
+    const item = {
+      id,
+      name: details.Name || `Asset ${id}`,
+      isLimited: !!details.IsLimited,
+      isLimitedU: !!details.IsLimitedUnique,
+      isForSale: !!details.IsForSale,
+      lastPrice: price,
+      priceSource: source,
+      thumbUrl: thumb,
+      addedAt: Date.now(),
+      lastChecked: Date.now(),
+      alertMode: mode,
+      alertThreshold: threshold,
+      lastAlertAt: 0
+    };
+
+    state.items.push(item);
+    saveState();
+    renderItems();
+    document.getElementById('itemInput').value = '';
+    document.getElementById('alertThreshold').value = '';
+    log(`✓ 추가됨: ${item.name} (${id}) — ${price !== null ? price + ' R$' : '가격 없음'}`, 'ok');
+  } catch (e) {
+    log(`추가 실패 (${id}): ${e.message}`, 'err');
+  }
+}
+
+/* ---------- CHECK ITEM ---------- */
+async function checkItem(item, silent = false) {
+  try {
+    const details = await fetchAssetDetails(item.id);
+    const { price, source } = await getEffectivePrice(details, item.id);
+    const oldPrice = item.lastPrice;
+    item.lastChecked = Date.now();
+    item.priceSource = source;
+    item.isForSale = !!details.IsForSale;
+    state.stats.checks++;
+
+    if (price === null) {
+      if (!silent) log(`${item.name}: 가격 정보 없음`, 'warn');
+      saveState();
+      return;
+    }
+
+    if (oldPrice === null) {
+      item.lastPrice = price;
+      saveState();
+      if (!silent) log(`${item.name}: 초기 가격 ${price} R$`, '');
+      return;
+    }
+
+    if (price !== oldPrice) {
+      // 변동 발생!
+      const delta = price - oldPrice;
+      const direction = delta > 0 ? '↑' : '↓';
+      log(`💰 ${item.name}: ${oldPrice} → ${price} R$ (${direction}${Math.abs(delta)})`, 'alert');
+
+      const shouldAlert = checkAlertCondition(item, oldPrice, price);
+      if (shouldAlert) {
+        await triggerAlert(item, oldPrice, price);
+        item.lastAlertAt = Date.now();
+        state.stats.alerts++;
+      }
+
+      item.lastPrice = price;
+      flashCard(item.id);
+    } else {
+      if (!silent) log(`${item.name}: 변동 없음 (${price} R$)`, '');
+    }
+
+    saveState();
+  } catch (e) {
+    log(`체크 실패 ${item.name}: ${e.message}`, 'err');
+  }
+}
+
+function checkAlertCondition(item, oldPrice, newPrice) {
+  const mode = item.alertMode;
+  const t = item.alertThreshold;
+  if (mode === 'any') return true;
+  if (mode === 'drop') return newPrice < oldPrice;
+  if (mode === 'below') return t !== null && newPrice <= t && oldPrice > t;
+  if (mode === 'above') return t !== null && newPrice >= t && oldPrice < t;
+  return false;
+}
+
+async function triggerAlert(item, oldPrice, newPrice) {
+  // Discord webhook
+  if (state.webhookUrl) {
+    try {
+      const delta = newPrice - oldPrice;
+      const directionEmoji = delta < 0 ? '📉' : '📈';
+      const color = delta < 0 ? 0x4CAF50 : 0xE53935;
+      const embed = {
+        title: `${directionEmoji} ${item.name}`,
+        url: `https://www.roblox.com/ko/catalog/${item.id}`,
+        color: color,
+        fields: [
+          { name: '이전 가격', value: `**${oldPrice.toLocaleString()}** R$`, inline: true },
+          { name: '현재 가격', value: `**${newPrice.toLocaleString()}** R$`, inline: true },
+          { name: '변동', value: `${delta > 0 ? '+' : ''}${delta.toLocaleString()} R$`, inline: true },
+          { name: 'Asset ID', value: `\`${item.id}\``, inline: true },
+          { name: '소스', value: item.priceSource, inline: true }
+        ],
+        footer: { text: 'TOKU Roblox Watcher' },
+        timestamp: new Date().toISOString()
+      };
+      if (item.thumbUrl) embed.thumbnail = { url: item.thumbUrl };
+
+      await fetch(state.webhookUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          username: 'TOKU Roblox Watcher',
+          embeds: [embed]
+        })
+      });
+      log(`📤 웹훅 전송 완료: ${item.name}`, 'ok');
+    } catch (e) {
+      log(`웹훅 전송 실패: ${e.message}`, 'err');
+    }
+  }
+
+  // Browser notification
+  if ('Notification' in window && Notification.permission === 'granted') {
+    const n = new Notification(`${item.name} 가격 변동`, {
+      body: `${oldPrice.toLocaleString()} → ${newPrice.toLocaleString()} R$`,
+      icon: item.thumbUrl || undefined,
+      tag: `roblox-${item.id}`
+    });
+    n.onclick = () => {
+      window.open(`https://www.roblox.com/ko/catalog/${item.id}`, '_blank');
+      n.close();
+    };
+  }
+}
+
+function flashCard(id) {
+  const card = document.querySelector(`[data-item-id="${id}"]`);
+  if (card) {
+    card.classList.remove('flash');
+    void card.offsetWidth;
+    card.classList.add('flash');
+  }
+}
+
+/* ---------- POLLING ---------- */
+function startMonitoring() {
+  if (isRunning) return;
+  if (state.items.length === 0) {
+    log('추적할 아이템이 없음. 먼저 아이템을 추가하세요.', 'warn');
+    return;
+  }
+  isRunning = true;
+  const sec = Math.max(15, parseInt(document.getElementById('intervalSec').value, 10) || 60);
+  state.intervalSec = sec;
+  saveState();
+
+  log(`▶ 모니터링 시작 — 주기 ${sec}초 · ${state.items.length}개 아이템`, 'ok');
+  updateStatusUI();
+
+  // 즉시 한 번 체크
+  checkAllItems(true);
+
+  pollTimer = setInterval(() => {
+    checkAllItems();
+  }, sec * 1000);
+}
+
+function stopMonitoring() {
+  if (!isRunning) return;
+  isRunning = false;
+  clearInterval(pollTimer);
+  pollTimer = null;
+  log('■ 모니터링 정지됨', 'warn');
+  updateStatusUI();
+}
+
+async function checkAllItems(silent = false) {
+  if (state.items.length === 0) return;
+  log(`🔄 전체 체크 시작 (${state.items.length}개)`, '');
+  for (const item of state.items) {
+    await checkItem(item, silent);
+    // API 부담 방지 — 200ms 간격
+    await new Promise(r => setTimeout(r, 200));
+  }
+  renderItems();
+  updateStatusUI();
+}
+
+/* ---------- WEBHOOK TEST ---------- */
+async function testWebhook() {
+  const url = document.getElementById('webhookUrl').value.trim();
+  if (!url) {
+    log('웹훅 URL을 먼저 입력하세요', 'err');
+    return;
+  }
+  state.webhookUrl = url;
+  saveState();
+
+  try {
+    await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        username: 'TOKU Roblox Watcher',
+        embeds: [{
+          title: '🧪 웹훅 테스트',
+          description: '연결 정상! メレ가 인사를 전합니다.',
+          color: 0x8E24AA,
+          footer: { text: 'TOKU Roblox Watcher · Test' },
+          timestamp: new Date().toISOString()
+        }]
+      })
+    });
+    log('✓ 테스트 웹훅 전송 성공', 'ok');
+  } catch (e) {
+    log(`테스트 실패: ${e.message}`, 'err');
+  }
+}
+
+/* ---------- DELETE ---------- */
+function deleteItem(id) {
+  if (!confirm(`이 아이템을 추적 목록에서 제거할까?\nID: ${id}`)) return;
+  state.items = state.items.filter(it => it.id !== id);
+  saveState();
+  renderItems();
+  log(`✗ 제거됨: ${id}`, 'warn');
+}
+
+/* ---------- RESET ---------- */
+function resetItem(id) {
+  const item = state.items.find(it => it.id === id);
+  if (!item) return;
+  item.lastPrice = null;
+  item.lastAlertAt = 0;
+  saveState();
+  renderItems();
+  log(`↺ 가격 베이스 리셋: ${item.name}`, '');
+}
+
+/* ---------- UI RENDER ---------- */
+function renderItems() {
+  const list = document.getElementById('itemList');
+  const count = state.items.length;
+  document.getElementById('listCount').textContent = count;
+  document.getElementById('itemsCountPill').textContent = count;
+
+  if (count === 0) {
+    list.innerHTML = '<div class="empty-state">아직 추적 중인 아이템이 없음. 위에서 URL이나 ID를 입력해서 추가해.</div>';
+    return;
+  }
+
+  list.innerHTML = '<div class="item-grid">' + state.items.map(it => {
+    const ruleText = formatRule(it);
+    const priceDisplay = it.lastPrice !== null
+      ? `<span class="price-val">${it.lastPrice.toLocaleString()} R$</span>`
+      : `<span class="price-val unset">미수집</span>`;
+
+    let tags = '';
+    if (it.isLimitedU) tags += '<span class="item-tag unique">LIMITED U</span>';
+    else if (it.isLimited) tags += '<span class="item-tag limited">LIMITED</span>';
+    else tags += '<span class="item-tag normal">CATALOG</span>';
+    if (!it.isForSale && !it.isLimited && !it.isLimitedU) tags += '<span class="item-tag offsale">OFFSALE</span>';
+
+    const thumb = it.thumbUrl
+      ? `<img class="item-thumb" src="${it.thumbUrl}" alt="">`
+      : `<div class="item-thumb-placeholder">NO IMG</div>`;
+
+    const lastChk = it.lastChecked ? new Date(it.lastChecked).toLocaleTimeString('ko-KR') : '—';
+
+    return `
+      <div class="item-card" data-item-id="${it.id}">
+        <div class="item-head">
+          ${thumb}
+          <div class="item-meta">
+            <div class="item-name">${escapeHtml(it.name)}</div>
+            <div class="item-id">
+              <a href="https://www.roblox.com/ko/catalog/${it.id}" target="_blank" rel="noopener">#${it.id} ↗</a>
+            </div>
+            <div>${tags}</div>
+          </div>
+        </div>
+        <div class="item-price-row">
+          <span class="price-label">현재가 (${it.priceSource || '?'})</span>
+          ${priceDisplay}
+        </div>
+        <div class="item-rule">
+          <span class="rule-text">${ruleText}</span>
+        </div>
+        <div class="last-checked">최근 체크: ${lastChk}</div>
+        <div class="item-actions">
+          <button onclick="checkSingle('${it.id}')">즉시 체크</button>
+          <button onclick="resetItem('${it.id}')">베이스 리셋</button>
+          <button class="del" onclick="deleteItem('${it.id}')">삭제</button>
+        </div>
+      </div>
+    `;
+  }).join('') + '</div>';
+}
+
+function formatRule(it) {
+  const m = it.alertMode;
+  const t = it.alertThreshold;
+  if (m === 'any') return '🔔 모든 가격 변경시';
+  if (m === 'drop') return '📉 하락시에만';
+  if (m === 'below') return `📉 ${t?.toLocaleString()} R$ 이하 도달시`;
+  if (m === 'above') return `📈 ${t?.toLocaleString()} R$ 이상 도달시`;
+  return m;
+}
+
+async function checkSingle(id) {
+  const item = state.items.find(it => it.id === id);
+  if (!item) return;
+  log(`🔍 즉시 체크: ${item.name}`, '');
+  await checkItem(item);
+  renderItems();
+}
+
+function updateStatusUI() {
+  const pill = document.getElementById('statusPill');
+  const text = document.getElementById('statusText');
+  if (isRunning) {
+    pill.classList.add('active');
+    pill.classList.remove('idle');
+    text.textContent = `실행중 · ${state.intervalSec}s`;
+  } else {
+    pill.classList.remove('active');
+    pill.classList.add('idle');
+    text.textContent = '정지됨';
+  }
+  document.getElementById('startBtn').disabled = isRunning;
+  document.getElementById('stopBtn').disabled = !isRunning;
+  document.getElementById('checkCountPill').textContent = state.stats.checks;
+  document.getElementById('alertCountPill').textContent = state.stats.alerts;
+}
+
+function escapeHtml(s) {
+  return String(s)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
+
+/* ---------- INIT ---------- */
+window.addEventListener('DOMContentLoaded', () => {
+  loadState();
+
+  document.getElementById('webhookUrl').value = state.webhookUrl || '';
+  document.getElementById('intervalSec').value = state.intervalSec || 60;
+
+  document.getElementById('webhookUrl').addEventListener('change', (e) => {
+    state.webhookUrl = e.target.value.trim();
+    saveState();
+  });
+
+  document.getElementById('intervalSec').addEventListener('change', (e) => {
+    state.intervalSec = parseInt(e.target.value, 10) || 60;
+    saveState();
+  });
+
+  document.getElementById('addItemBtn').addEventListener('click', addItem);
+  document.getElementById('itemInput').addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') addItem();
+  });
+
+  document.getElementById('startBtn').addEventListener('click', startMonitoring);
+  document.getElementById('stopBtn').addEventListener('click', stopMonitoring);
+  document.getElementById('testWebhookBtn').addEventListener('click', testWebhook);
+  document.getElementById('checkNowBtn').addEventListener('click', () => checkAllItems(false));
+
+  document.getElementById('notifBtn').addEventListener('click', () => {
+    if (!('Notification' in window)) {
+      log('이 브라우저는 알림 미지원', 'err');
+      return;
+    }
+    Notification.requestPermission().then(p => {
+      log(`알림 권한: ${p}`, p === 'granted' ? 'ok' : 'warn');
+      if (p === 'granted') {
+        document.getElementById('notifBtn').textContent = '✓ 알림 활성화';
+      }
+    });
+  });
+
+  if ('Notification' in window && Notification.permission === 'granted') {
+    document.getElementById('notifBtn').textContent = '✓ 알림 활성화';
+  }
+
+  renderItems();
+  updateStatusUI();
+  log('TOKU Roblox Watcher 준비 완료. 메레가 지켜보고 있다.', 'ok');
+});
+
+/* expose for onclick handlers */
+window.deleteItem = deleteItem;
+window.resetItem = resetItem;
+window.checkSingle = checkSingle;
+</script>
+</body>
+</html>

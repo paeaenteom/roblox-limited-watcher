@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>TOKU :: Roblox Limited Watcher v2.3</title>
+<title>TOKU :: Roblox Limited Watcher v2.4</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@500;700;900&family=Noto+Sans+KR:wght@300;400;500;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
@@ -347,7 +347,7 @@
       <div>
         <h1>ROBLOX LIMITED WATCHER</h1>
         <div class="subtitle">
-          로블록스 리미티드 가격 추적기 · <span class="accent">メレ Edition</span> · <span class="ver">v2.3 Rolimons Scrape</span>
+          로블록스 리미티드 가격 추적기 · <span class="accent">メレ Edition</span> · <span class="ver">v2.4 Scrape First</span>
         </div>
       </div>
     </div>
@@ -836,7 +836,7 @@ async function testWebhook() {
         username: 'TOKU Roblox Watcher',
         embeds: [{
           title: '🧪 웹훅 테스트',
-          description: 'v2.3 Rolimons Scrape · 연결 정상. メレが見守っている。',
+          description: 'v2.4 Scrape First · 연결 정상. メレが見守っている。',
           color: 0x8E24AA,
           footer: { text: 'TOKU Roblox Watcher · Test' },
           timestamp: new Date().toISOString()
@@ -1028,7 +1028,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   renderItems();
   updateStatusUI();
   updateRolimonsPillState('idle');
-  log('TOKU Watcher v2.3 Rolimons Scrape Edition 초기화.', 'ok');
+  log('TOKU Watcher v2.4 Scrape First Edition 초기화.', 'ok');
   await fetchRolimonsData();
   renderItems();
 });
